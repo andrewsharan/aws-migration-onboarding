@@ -1,5 +1,3 @@
-/*
-
 # Transit Gateway
 
 resource "aws_ec2_transit_gateway" "andrew_tgw" {
@@ -27,4 +25,3 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "prod_attachment" {
   }
 }
 
-*/
