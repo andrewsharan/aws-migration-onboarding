@@ -10,7 +10,7 @@ terraform {
 
 provider "aws" {
   region  = "ap-south-1"
-  profile = "Enter your SSO profile name"
+  profile = "AdministratorAccess-169340963666"
 
   default_tags {
     tags = {
