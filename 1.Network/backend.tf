@@ -5,6 +5,6 @@ terraform {
     region       = "ap-south-1"
     encrypt      = true
     use_lockfile = true
-    profile      = "AdministratorAccess-169340963666"
+    profile      = "Enter your profile name"
   }
 }
