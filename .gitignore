@@ -1,0 +1,19 @@
+# Local secret files
+*.tfvars
+*.tfvars.json
+
+# Local terraform state files and backups
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Terraform binary directory
+.terraform/
+
+# Hidden lock files or local plans
+.terraform.lock.hcl
+tfplan
+tfplan-*
