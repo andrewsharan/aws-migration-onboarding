@@ -10,7 +10,7 @@ resource "aws_vpc" "analytics_vpc" {
 resource "aws_vpc_peering_connection" "prod_to_analytics" {
   vpc_id        = aws_vpc.andrew_vpc.id
   peer_vpc_id   = aws_vpc.analytics_vpc.id
-  auto_accept   = true # Valid when both VPCs reside within the same AWS account
+  auto_accept   = true 
 
   tags = {
     Name = "andrew-peering-prod-analytics"
