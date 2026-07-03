@@ -1,7 +1,7 @@
-# Load Balancer Security Group - Public Subnet
+# Load Balancer Security Group (Public Subnet)
 resource "aws_security_group" "alb_sg" {
   name        = "andrew-prod-alb-sg"
-  description = "Public Facing ALB Security Group"
+  description = "Public facing ALB Security Group"
   vpc_id      = aws_vpc.andrew_vpc.id
 
   ingress {
@@ -13,57 +13,61 @@ resource "aws_security_group" "alb_sg" {
   }
 
   egress {
-    description = "Allow all outbound traffic to internal workloads"
+    description = "Allow outbound to private subnet  workloads"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "andrew-prod-alb-sg"
-  }
+  tags = { Name = "andrew-prod-alb-sg" }
 }
 
-# Application Security Group - Private Application Subnet
+# Application Security Group (Private Subnet)
 resource "aws_security_group" "app_sg" {
   name        = "andrew-prod-app-sg"
-  description = "Private Application Security Group"
+  description = "Private Application Subnet Security Group"
   vpc_id      = aws_vpc.andrew_vpc.id
 
   ingress {
-    description     = "Strictly allow web traffic only from the ALB security group"
+    description     = "Allow web traffic only from the ALB security group"
     from_port       = 8080
     to_port         = 8080
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb_sg.id] 
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   egress {
-    description = "Allow outbound traffic for patching or external API calls"
+    description = "Allow outbound traffic via NAT Gateway for external API calls"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "andrew-prod-app-sg"
-  }
+  tags = { Name = "andrew-prod-app-sg" }
 }
 
-# Database Security Group - Isolated Subnet
+# Data Security Group (Data Subnet)
 resource "aws_security_group" "db_sg" {
   name        = "andrew-prod-db-sg"
-  description = "Isolated Database Security Group"
+  description = "Air-gapped database tier security rules"
   vpc_id      = aws_vpc.andrew_vpc.id
 
   ingress {
-    description     = "Allow database queries strictly from private application security group"
+    description     = "Allow database queries from verified private subnet workloads"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.app_sg.id]
+  }
+
+  ingress {
+    description     = "Allow to query DB using Bastion Host"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
   }
 
   egress {
@@ -71,10 +75,8 @@ resource "aws_security_group" "db_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [aws_vpc.andrew_vpc.cidr_block] 
+    cidr_blocks = [aws_vpc.andrew_vpc.cidr_block]
   }
 
-  tags = {
-    Name = "andrew-prod-db-sg"
-  }
+  tags = { Name = "andrew-prod-db-sg" }
 }

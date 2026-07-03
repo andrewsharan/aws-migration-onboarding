@@ -1,4 +1,4 @@
-# Virtual Private Cloud
+# Core VPC
 resource "aws_vpc" "andrew_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -9,7 +9,7 @@ resource "aws_vpc" "andrew_vpc" {
   }
 }
 
-# Internet Gateway for Public Routing
+# Internet Gateway
 resource "aws_internet_gateway" "andrew_igw" {
   vpc_id = aws_vpc.andrew_vpc.id
 
@@ -18,13 +18,13 @@ resource "aws_internet_gateway" "andrew_igw" {
   }
 }
 
-# Public Subnet
+# Public Subnets
 resource "aws_subnet" "public" {
   count                   = length(var.availability_zones)
   vpc_id                  = aws_vpc.andrew_vpc.id
-  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index)
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index) 
   availability_zone       = var.availability_zones[count.index]
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false
 
   tags = {
     Name                     = "andrew-prod-public-subnet-${var.availability_zones[count.index]}"
@@ -32,11 +32,11 @@ resource "aws_subnet" "public" {
   }
 }
 
-# Private Application Subnet
+# Private Application Subnets
 resource "aws_subnet" "private_app" {
   count             = length(var.availability_zones)
   vpc_id            = aws_vpc.andrew_vpc.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index + 1) 
+  cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index + 1)
   availability_zone = var.availability_zones[count.index]
 
   tags = {
@@ -45,7 +45,7 @@ resource "aws_subnet" "private_app" {
   }
 }
 
-# Isolated Data Subnet 
+# Isolated Data Subnets
 resource "aws_subnet" "isolated_data" {
   count             = length(var.availability_zones)
   vpc_id            = aws_vpc.andrew_vpc.id
@@ -57,28 +57,30 @@ resource "aws_subnet" "isolated_data" {
   }
 }
 
-# Elastic IPs and NAT Gateway (One Per AZ)
+
+# Allocate Elastic IP for the NAT Gateway
 resource "aws_eip" "nat" {
-  count  = length(var.availability_zones)
   domain = "vpc"
 
   tags = {
-    Name = "andrew-prod-nat-eip-${var.availability_zones[count.index]}"
+    Name = "andrew-prod-nat-eip"
   }
 }
 
+# Provision the NAT Gateway inside Public Subnet A
 resource "aws_nat_gateway" "andrew_nat" {
-  count         = length(var.availability_zones)
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name = "andrew-prod-natgw-${var.availability_zones[count.index]}"
+    Name = "andrew-prod-natgw-shared"
   }
+
   depends_on = [aws_internet_gateway.andrew_igw]
 }
 
-# Explicit Route Tables Configuration
+
+# Public Route Table pointing to the Internet Gateway 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.andrew_vpc.id
 
@@ -92,20 +94,21 @@ resource "aws_route_table" "public" {
   }
 }
 
+# Private Route Table pointing to NAT gateway to the NAT Gateway
 resource "aws_route_table" "private" {
-  count  = length(var.availability_zones)
   vpc_id = aws_vpc.andrew_vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.andrew_nat[count.index].id
+    nat_gateway_id = aws_nat_gateway.andrew_nat.id
   }
 
   tags = {
-    Name = "andrew-prod-private-rt-${var.availability_zones[count.index]}"
+    Name = "andrew-prod-private-shared-rt"
   }
 }
 
+# Data Route Table with no routes
 resource "aws_route_table" "isolated" {
   vpc_id = aws_vpc.andrew_vpc.id
 
@@ -114,21 +117,24 @@ resource "aws_route_table" "isolated" {
   }
 }
 
-# Route Table Associations
+# Public Subnet Association to Public Route Table
 resource "aws_route_table_association" "public" {
   count          = length(var.availability_zones)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
+# Private Subnet Association to Private Route Table
 resource "aws_route_table_association" "private" {
   count          = length(var.availability_zones)
   subnet_id      = aws_subnet.private_app[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = aws_route_table.private.id
 }
 
+# Data Subnet Association to Data Route Table
 resource "aws_route_table_association" "isolated" {
   count          = length(var.availability_zones)
   subnet_id      = aws_subnet.isolated_data[count.index].id
   route_table_id = aws_route_table.isolated.id
 }
+

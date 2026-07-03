@@ -10,7 +10,7 @@ terraform {
 
 provider "aws" {
   region  = "ap-south-1"
-  profile = AdministratorAccess-169340963666
+  profile = "AdministratorAccess-169340963666"
 
 
   # Enforce consistent tagging across all resources

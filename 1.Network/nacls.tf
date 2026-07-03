@@ -1,9 +1,8 @@
-# Public Subnet NACL - Allows public web traffic and outbound responses
+# Public Subnet NACL
 resource "aws_network_acl" "public_nacl" {
   vpc_id     = aws_vpc.andrew_vpc.id
   subnet_ids = aws_subnet.public[*].id
 
-  # Inbound: Allow HTTP traffic from anywhere
   ingress {
     protocol   = "tcp"
     rule_no    = 100
@@ -13,7 +12,6 @@ resource "aws_network_acl" "public_nacl" {
     to_port    = 80
   }
 
-  # Inbound: Allow HTTPS traffic from anywhere
   ingress {
     protocol   = "tcp"
     rule_no    = 110
@@ -23,7 +21,7 @@ resource "aws_network_acl" "public_nacl" {
     to_port    = 443
   }
 
-  # Inbound: Allow return traffic from ephemeral ports
+  #  Allows return traffic from AWS SSM Endpoint APIs back into the public subnet (Bastion)
   ingress {
     protocol   = "tcp"
     rule_no    = 120
@@ -33,7 +31,6 @@ resource "aws_network_acl" "public_nacl" {
     to_port    = 65535
   }
 
-  # Outbound: Allow all outbound traffic to the internet
   egress {
     protocol   = "-1"
     rule_no    = 100
@@ -43,17 +40,14 @@ resource "aws_network_acl" "public_nacl" {
     to_port    = 0
   }
 
-  tags = {
-    Name = "andrew-prod-public-nacl"
-  }
+  tags = { Name = "andrew-prod-public-nacl" }
 }
 
-# Private Application Subnet NACL - Completely blocks direct public access
+# Private Application Subnet NACL
 resource "aws_network_acl" "private_app_nacl" {
   vpc_id     = aws_vpc.andrew_vpc.id
   subnet_ids = aws_subnet.private_app[*].id
 
-  # Inbound: Allow traffic from the VPC CIDR block only
   ingress {
     protocol   = "-1"
     rule_no    = 100
@@ -63,7 +57,7 @@ resource "aws_network_acl" "private_app_nacl" {
     to_port    = 0
   }
 
-  # Inbound: Allow return ephemeral port traffic from external internet APIs via NAT Gateway
+  # Allows return web traffic back into private nodes from public NAT calls
   ingress {
     protocol   = "tcp"
     rule_no    = 110
@@ -73,7 +67,6 @@ resource "aws_network_acl" "private_app_nacl" {
     to_port    = 65535
   }
 
-  # Outbound: Allow all internal and external outbound traffic
   egress {
     protocol   = "-1"
     rule_no    = 100
@@ -83,7 +76,5 @@ resource "aws_network_acl" "private_app_nacl" {
     to_port    = 0
   }
 
-  tags = {
-    Name = "andrew-prod-private-app-nacl"
-  }
+  tags = { Name = "andrew-prod-private-app-nacl" }
 }
