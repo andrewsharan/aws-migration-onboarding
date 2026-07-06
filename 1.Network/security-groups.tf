@@ -1,6 +1,6 @@
 resource "aws_security_group" "alb_sg" {
   name        = "andrew-prod-alb-sg"
-  description = "Perimeter control for external ALBs allowing web traffic"
+  description = "Public facing ALB Security Group"
   vpc_id      = aws_vpc.andrew_vpc.id
 
   ingress {
