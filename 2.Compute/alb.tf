@@ -7,7 +7,7 @@ resource "aws_lb" "external_alb" {
   subnets            = data.terraform_remote_state.network.outputs.public_subnet_ids
 
   drop_invalid_header_fields = true 
-  enable_deletion_protection = false # Hardened to true in enterprise pipelines
+  enable_deletion_protection = false
 
   tags = { Name = "andrew-prod-web-alb" }
 }

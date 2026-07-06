@@ -17,7 +17,6 @@ provider "aws" {
       Project     = "andrew"
       Environment = "production"
       ManagedBy   = "terraform"
-      Layer       = "compute"
     }
   }
 }
