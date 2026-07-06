@@ -1,3 +1,5 @@
+/*
+
 # Secondary Analytics VPC
 
 resource "aws_vpc" "analytics_vpc" {
@@ -32,3 +34,5 @@ resource "aws_route" "analytics_to_prod_route" {
   destination_cidr_block    = aws_vpc.andrew_vpc.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.prod_to_analytics.id
 }
+
+*/

@@ -1,8 +1,15 @@
-# Load Balancer Security Group (Public Subnet)
 resource "aws_security_group" "alb_sg" {
   name        = "andrew-prod-alb-sg"
-  description = "Public facing ALB Security Group"
+  description = "Perimeter control for external ALBs allowing web traffic"
   vpc_id      = aws_vpc.andrew_vpc.id
+
+  ingress {
+    description = "Allow HTTP traffic from public internet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   ingress {
     description = "Allow TLS from public internet"
@@ -13,7 +20,7 @@ resource "aws_security_group" "alb_sg" {
   }
 
   egress {
-    description = "Allow outbound to private subnet  workloads"
+    description = "Allow outbound to app layer workloads"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -22,7 +29,6 @@ resource "aws_security_group" "alb_sg" {
 
   tags = { Name = "andrew-prod-alb-sg" }
 }
-
 # Application Security Group (Private Subnet)
 resource "aws_security_group" "app_sg" {
   name        = "andrew-prod-app-sg"
