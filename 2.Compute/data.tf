@@ -5,7 +5,7 @@ data "terraform_remote_state" "network" {
     key          = "network/terraform.tfstate"
     region       = "ap-south-1"
     use_lockfile = true
-    profile      = "AdministratorAccess-169340963666"
+    profile      = "AdministratorAccess"
   }
 }
 
